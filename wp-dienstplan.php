@@ -8,7 +8,26 @@
     Version: 0.1
 */
 // Erstellt die Tabelle beim ersten Start
-function install () {
+function dienstplan_install_multisite(){
+    global $wpdb;
+    if (function_exists('is_multisite') && is_multisite()) {
+        // check if it is a network activation - if so, run the activation function for each blog id
+        //if ($networkwide) {
+            $old_blog = $wpdb->blogid;
+            // Get all blog ids
+            $blogids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+            foreach ($blogids as $blog_id) {
+                switch_to_blog($blog_id);
+                dienstplan_install();
+            }
+            switch_to_blog($old_blog);
+            return;
+        //}
+    }
+    dienstplan_install();
+}
+
+function dienstplan_install() {
     global $wpdb;
 
     $table_name = $wpdb->prefix . "dienstplan_dienste";
@@ -41,7 +60,7 @@ function install () {
         dbDelta($sql);
     }
 }
-register_activation_hook(__FILE__,'install');
+register_activation_hook(__FILE__,'dienstplan_install_multisite');
 
 function dienstplan_menu() {
     add_menu_page('Dienstplan', 'Dienstplan', 8, __FILE__, 'dienstplan_backend');
