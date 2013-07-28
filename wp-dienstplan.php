@@ -20,6 +20,7 @@ function install () {
                   `ort` varchar(500) NOT NULL DEFAULT '',
                   `beschreibung` varchar(1000) NOT NULL DEFAULT '',
                   `gruppen` varchar(50) DEFAULT '',
+                   `term_id` int(11) DEFAULT NULL,
                   PRIMARY KEY (`id`)
                 )";
 
@@ -73,7 +74,7 @@ function dienstplan_neu(){
     print_r($_POST);
     if(isset($_POST['cat'])){
         $datetime = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
-        $wpdb->insert($table_name_dienst,array('datetime' => $datetime,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe'])),array('%s','%s','%s','%s'));
+        $wpdb->insert($table_name_dienst,array('datetime' => $datetime,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe']),'term_id' => $_POST['cat']),array('%s','%s','%s','%s','%d'));
     }
     echo "<form METHOD='POST'>";
     echo "<table class='wp-list-table widefat'>";
@@ -138,10 +139,12 @@ function dienstplan_neu(){
 
     echo "</form>";
 
+    dienstplan_backend();
+
     ?>
     <script type="text/javascript">
         jQuery(document).ready(function(){
-            jQuery('#datum').datepicker({dateFormat: "dd.mm.yy"});
+            jQuery('#datum').datepicker({dateFormat: "dd.mm.yy",minDate: 0 });
         });
 
         var dropdown = document.getElementById("cat");
@@ -206,6 +209,8 @@ function dienstplan_einstellungen(){
     echo "</tr>";
     echo "</table>";
     echo "</form>";
+
+
 }
 
 function dienstplan_input_select_time($id,$zeit = null){
@@ -269,7 +274,45 @@ function dienstplan_date_german2mysql($date) {
 }
 
 function dienstplan_backend(){
+    global $wpdb;
+    $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
+    $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
     echo "<h1>Dienstplan</h1>";
+    echo "<table class='wp-list-table widefat'>";
+    echo "<tr>";
+    echo "<th>Datum / Uhrzeit</th>";
+    echo "<th>Gruppen</th>";
+    echo "<th>Bereich</th>";
+    echo "<th>Beschreibung</th>";
+    echo "<th>Ort</th>";
+
+    echo "</tr>";
+    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) order by datetime");
+    foreach($rows as $row){
+        echo "<tr>";
+        echo "<td>";
+        echo $row->datetime;
+        echo "</td>";
+        echo "<td>";
+        $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
+        foreach($rows_gruppen as $row_gruppe){
+            echo $row_gruppe->name."<br/>";
+
+        }
+        //echo $row->gruppen;
+        echo "</td>";
+        echo "<td>";
+        echo $row->termaname;
+        echo "</td>";
+        echo "<td>";
+        echo $row->beschreibung;
+        echo "</td>";
+        echo "<td>";
+        echo $row->ort;
+        echo "</td>";
+        echo "</tr>";
+    }
+    echo "</table>";
 }
 
 add_action( 'admin_footer', 'dienstplan_backend_gruppen_load_javascript' );
