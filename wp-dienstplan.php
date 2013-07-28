@@ -4,7 +4,7 @@
     Plugin URI: https://github.com/PowerPan/wp-dienstplan
     Description: Wordpress Dienstplan Plugin
 	Author: Johannes Rudolph
-	Author URI: hhttps://github.com/PowerPan/
+	Author URI: https://github.com/PowerPan/
     Version: 0.1
 */
 // Erstellt die Tabelle beim ersten Start
@@ -12,7 +12,7 @@ function dienstplan_install_multisite(){
     global $wpdb;
     if (function_exists('is_multisite') && is_multisite()) {
         // check if it is a network activation - if so, run the activation function for each blog id
-        //if ($networkwide) {
+        if ($networkwide) {
             $old_blog = $wpdb->blogid;
             // Get all blog ids
             $blogids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
@@ -22,10 +22,12 @@ function dienstplan_install_multisite(){
             }
             switch_to_blog($old_blog);
             return;
-        //}
+        }
     }
     dienstplan_install();
 }
+
+
 
 function dienstplan_install() {
     global $wpdb;
@@ -334,6 +336,48 @@ function dienstplan_backend(){
     echo "</table>";
 }
 
+function dienstplan_page(){
+    global $wpdb;
+    $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
+    $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
+    $html =  "<table class='wp-list-table widefat'>";
+    $html .=  "<tr>";
+    $html .=  "<th>Datum / Uhrzeit</th>";
+    $html .=  "<th>Gruppen</th>";
+    $html .=  "<th>Bereich</th>";
+    $html .=  "<th>Beschreibung</th>";
+    $html .=  "<th>Ort</th>";
+
+    $html .=  "</tr>";
+    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) order by datetime");
+    foreach($rows as $row){
+        $html .=  "<tr>";
+        $html .=  "<td>";
+        $html .=  $row->datetime;
+        $html .=  "</td>";
+        $html .=  "<td>";
+        $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
+        foreach($rows_gruppen as $row_gruppe){
+            $html .=  $row_gruppe->name."<br/>";
+
+        }
+        //$html .=  $row->gruppen;
+        $html .=  "</td>";
+        $html .=  "<td>";
+        $html .=  $row->termaname;
+        $html .=  "</td>";
+        $html .=  "<td>";
+        $html .=  $row->beschreibung;
+        $html .=  "</td>";
+        $html .=  "<td>";
+        $html .=  $row->ort;
+        $html .=  "</td>";
+        $html .=  "</tr>";
+    }
+    $html .=  "</table>";
+    return $html;
+}
+
 add_action( 'admin_footer', 'dienstplan_backend_gruppen_load_javascript' );
 
 function dienstplan_backend_gruppen_load_javascript() {
@@ -377,3 +421,22 @@ function dienstplan_backend_gruppen_load_callback() {
 
     die(); // this is required to return a proper result
 }
+
+function dienstplan_filter($content) {
+    // Check for the "more" tags
+    $more_pos = strpos($content, '<!--dienstplan-->');
+    if ($more_pos && !is_single()) {
+        $content = substr($content, 0, $more_pos);
+
+        $replace_by = dienstplan_page();
+
+        $content = $content . $replace_by;
+    }
+
+    return $content;
+
+
+
+    //return preg_replace( '<!--dienstplan-->', "123", $content );
+}
+add_filter('the_content', 'dienstplan_filter');
