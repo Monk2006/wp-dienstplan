@@ -294,6 +294,36 @@ function dienstplan_date_german2mysql($date) {
     }
 }
 
+function dienstplan_monat($date = null,$pdf = null){
+    if($date == null){
+        $monat = date("n");
+    }
+    else{
+        $monat = date("n",strtotime($date));
+    }
+    switch($monat){
+        case "1":   $return =  "Januar";break;
+        case "2":   $return =  "Februar";break;
+        case "3":   $return =  "M&auml;rz";break;
+        case "4":   $return =  "April";break;
+        case "5":   $return =  "Mai";break;
+        case "6":   $return =  "Juni";break;
+        case "7":   $return =  "Juli";break;
+        case "8":   $return =  "August";break;
+        case "9":   $return =  "September";break;
+        case "10":   $return =  "Oktober";break;
+        case "11":   $return =  "November";break;
+        case "12":   $return =  "Dezember";break;
+    }
+    //if($pdf == 1){
+        return $return;
+    //}
+    /*else{
+        echo $return;
+    }*/
+}
+
+
 function dienstplan_backend(){
     global $wpdb;
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
@@ -308,8 +338,15 @@ function dienstplan_backend(){
     echo "<th>Ort</th>";
 
     echo "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) order by datetime");
+    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) order by datetime desc");
+
     foreach($rows as $row){
+        
+
+
+
+
+        
         echo "<tr>";
         echo "<td>";
         echo $row->datetime;
@@ -342,16 +379,62 @@ function dienstplan_page($term_id){
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
     $html =  "<table class='wp-list-table widefat'>";
     $html .=  "<tr>";
-    $html .=  "<th>Datum / Uhrzeit</th>";
+    $html .=  "<th>Datum</th>";
+    $html .=  "<th>Uhrzeit</th>";
     $html .=  "<th>Gruppen</th>";
-    $html .=  "<th>Bereich</th>";
     $html .=  "<th>Beschreibung</th>";
     $html .=  "<th>Ort</th>";
 
     $html .=  "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$term_id."'order by datetime");
+    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$term_id."' and d.datetime > NOW() order by d.datetime");
+    $ersterlauf = 0;
+    $monat = '';
     foreach($rows as $row){
-        $html .=  "<tr>";
+        if($ersterlauf == 1){
+            $ersterlauf = 0;
+            $monat = substr($row->datetime,3,2);
+            $html .= "<tr>\n";
+            $html .= "<td colspan=\"5\" style=\"font-weight:bold\">";
+            $html .= dienstplan_monat($row->datetime);
+            $html .= "</td>\n";
+            $html .= "</tr>\n";
+        }
+        else{
+            $monatneu = substr($row->datetime,3,2);
+            if($monatneu != $monat){
+                $monat = $monatneu;
+                $html .= "<tr>\n";
+                $html .= "<td colspan=\"5\" style=\"font-weight:bold\">";
+                $html .= dienstplan_monat($row->datetime);
+                $html .= "</td>\n";
+                $html .= "</tr>\n";
+            }
+        }
+        $html .= "<tr>\n";
+        $html .= "<td>";
+        $html .= substr($row->datetime,0,10);
+        $html .= "</td>\n";
+        $html .= "<td>";
+        $zeit = substr($row->datetime,11,5);
+        if($zeit == "00:00"){
+            $zeit = "";
+        }
+        $html .= $zeit;
+        $html .= "</td>\n";
+        $html .= "<td>";
+        $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
+        foreach($rows_gruppen as $row_gruppe){
+            $html .= $row_gruppe->name."<br/>";
+
+        }
+        $html .= "</td>\n";
+        $html .= "<td>";
+        $html .= $row->beschreibung;
+        $html .= "</td>\n";
+        $html .= "<td>";
+        $html .= $row->ort;
+        $html .= "</td>\n";
+        /*$html .=  "<tr>";
         $html .=  "<td>";
         $html .=  $row->datetime;
         $html .=  "</td>";
@@ -372,7 +455,7 @@ function dienstplan_page($term_id){
         $html .=  "<td>";
         $html .=  $row->ort;
         $html .=  "</td>";
-        $html .=  "</tr>";
+        $html .=  "</tr>";*/
     }
     $html .=  "</table>";
     return $html;
@@ -421,6 +504,8 @@ function dienstplan_backend_gruppen_load_callback() {
 
     die(); // this is required to return a proper result
 }
+
+
 
 function dienstplan_filter($content) {
     $suche = "/[dienstplan bereich=[0-9][0-9]?[0-9]?[0-9]?]/";
