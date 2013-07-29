@@ -443,3 +443,4 @@ add_filter('the_content', 'dienstplan_filter');
 
 //TODO: PDF Export nach Bereich
 //TODO: replace Filter für Bereiche
+//TODO: Deintsalltion -> Löschen der Tabellen
