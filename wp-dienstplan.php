@@ -440,3 +440,6 @@ function dienstplan_filter($content) {
     //return preg_replace( '<!--dienstplan-->', "123", $content );
 }
 add_filter('the_content', 'dienstplan_filter');
+
+//TODO: PDF Export nach Bereich
+//TODO: replace Filter für Bereiche
