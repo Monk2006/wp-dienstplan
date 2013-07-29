@@ -336,7 +336,7 @@ function dienstplan_backend(){
     echo "</table>";
 }
 
-function dienstplan_page(){
+function dienstplan_page($term_id){
     global $wpdb;
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
@@ -349,7 +349,7 @@ function dienstplan_page(){
     $html .=  "<th>Ort</th>";
 
     $html .=  "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) order by datetime");
+    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$term_id."'order by datetime");
     foreach($rows as $row){
         $html .=  "<tr>";
         $html .=  "<td>";
@@ -423,24 +423,13 @@ function dienstplan_backend_gruppen_load_callback() {
 }
 
 function dienstplan_filter($content) {
-    // Check for the "more" tags
-    $more_pos = strpos($content, '<!--dienstplan-->');
-    if ($more_pos && !is_single()) {
-        $content = substr($content, 0, $more_pos);
-
-        $replace_by = dienstplan_page();
-
-        $content = $content . $replace_by;
-    }
-
+    $suche = "/[dienstplan bereich=[0-9][0-9]?[0-9]?[0-9]?]/";
+    preg_match($suche,$content,$ergebnis);
+    $id = str_replace("]","",str_replace("=","",$ergebnis[0]));
+    $content = str_replace("[dienstplan bereich=".$id."]",dienstplan_page($id),$content);
     return $content;
-
-
-
-    //return preg_replace( '<!--dienstplan-->', "123", $content );
 }
 add_filter('the_content', 'dienstplan_filter');
 
 //TODO: PDF Export nach Bereich
-//TODO: replace Filter für Bereiche
 //TODO: Deintsalltion -> Löschen der Tabellen
