@@ -65,9 +65,9 @@ function dienstplan_install() {
 register_activation_hook(__FILE__,'dienstplan_install_multisite');
 
 function dienstplan_menu() {
-    add_menu_page('Dienstplan', 'Dienstplan', 8, __FILE__, 'dienstplan_backend');
-    add_submenu_page(__FILE__, 'Neuer Dienst', 'Neuer Dienst', 8, 'dienstplan_neu', 'dienstplan_neu');
-    add_submenu_page(__FILE__, 'Einstellungen', 'Einstellungen', 8, 'dienstplan_einstellungen', 'dienstplan_einstellungen');
+    add_menu_page('Dienstplan', 'Dienstplan', 1,__FILE__, 'dienstplan_backend');
+    add_submenu_page(__FILE__, 'Neuer Dienst', 'Neuer Dienst',1  ,'dienstplan_neu', 'dienstplan_neu');
+    add_submenu_page(__FILE__, 'Einstellungen', 'Einstellungen',8,  'dienstplan_einstellungen', 'dienstplan_einstellungen');
 }
 add_action('admin_menu', 'dienstplan_menu');
 
@@ -377,7 +377,7 @@ function dienstplan_page($term_id){
     global $wpdb;
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
-    $html =  "<table class='wp-list-table widefat'>";
+    $html =  "<table class='wp-list-table widefat' width='100%'>";
     $html .=  "<tr>";
     $html .=  "<th>Datum</th>";
     $html .=  "<th>Uhrzeit</th>";
