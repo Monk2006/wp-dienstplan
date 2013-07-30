@@ -65,7 +65,7 @@ function dienstplan_install() {
 register_activation_hook(__FILE__,'dienstplan_install_multisite');
 
 function dienstplan_menu() {
-    add_menu_page('Dienstplan', 'Dienstplan', 1,__FILE__, 'dienstplan_backend', get_bloginfo('wpurl').'/wp-content/plugins/wp-dienstplan/icon.png');
+    add_menu_page('Dienstplan', 'Dienstplan', 1,__FILE__, 'dienstplan_backend', get_bloginfo('wpurl').'/wp-content/plugins/wp-dienstplan/icon.png',26);
     add_submenu_page(__FILE__, 'Neuer Dienst', 'Neuer Dienst',1  ,'dienstplan_neu', 'dienstplan_neu');
     add_submenu_page(__FILE__, 'Einstellungen', 'Einstellungen',8,  'dienstplan_einstellungen', 'dienstplan_einstellungen');
 }
