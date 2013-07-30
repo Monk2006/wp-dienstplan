@@ -65,7 +65,7 @@ function dienstplan_install() {
 register_activation_hook(__FILE__,'dienstplan_install_multisite');
 
 function dienstplan_menu() {
-    add_menu_page('Dienstplan', 'Dienstplan', 1,__FILE__, 'dienstplan_backend');
+    add_menu_page('Dienstplan', 'Dienstplan', 1,__FILE__, 'dienstplan_backend', get_bloginfo('wpurl').'/wp-content/plugins/wp-dienstplan/icon.png');
     add_submenu_page(__FILE__, 'Neuer Dienst', 'Neuer Dienst',1  ,'dienstplan_neu', 'dienstplan_neu');
     add_submenu_page(__FILE__, 'Einstellungen', 'Einstellungen',8,  'dienstplan_einstellungen', 'dienstplan_einstellungen');
 }
@@ -355,6 +355,7 @@ function dienstplan_backend(){
     echo "<th>Bereich</th>";
     echo "<th>Beschreibung</th>";
     echo "<th>Ort</th>";
+    echo "<th>Bearbeiten</th>";
 
     echo "</tr>";
     $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.datetime > NOW() and t.term_id in (".$categories.") order by d.datetime");
@@ -380,6 +381,9 @@ function dienstplan_backend(){
         echo "</td>";
         echo "<td>";
         echo $row->ort;
+        echo "</td>";
+        echo "<td>";
+        echo '<div id="icon-tools" class="icon16"></div>';
         echo "</td>";
         echo "</tr>";
     }
