@@ -328,6 +328,25 @@ function dienstplan_backend(){
     global $wpdb;
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
+    $catargs = array(
+        'type'                     => 'post',
+        'child_of'                 => 0,
+        'parent'                   => '',
+        'orderby'                  => 'name',
+        'order'                    => 'ASC',
+        'hide_empty'               => 0,
+        'hierarchical'             => 1,
+        'exclude'                  => '',
+        'include'                  => '',
+        'number'                   => '',
+        'taxonomy'                 => 'category',
+
+        'pad_counts'               => false );
+    $categories = get_categories( $catargs );
+    foreach($categories as $categorie){
+        $categoriesarray[] = $categorie->term_id;
+    }
+    $categories = implode(",",$categoriesarray);
     echo "<h1>Dienstplan</h1>";
     echo "<table class='wp-list-table widefat'>";
     echo "<tr>";
@@ -338,15 +357,9 @@ function dienstplan_backend(){
     echo "<th>Ort</th>";
 
     echo "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.datetime > NOW() order by d.datetime");
+    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.datetime > NOW() and t.term_id in (".$categories.") order by d.datetime");
 
     foreach($rows as $row){
-        
-
-
-
-
-        
         echo "<tr>";
         echo "<td>";
         echo $row->datetime;
@@ -434,28 +447,6 @@ function dienstplan_page($term_id){
         $html .= "<td>";
         $html .= $row->ort;
         $html .= "</td>\n";
-        /*$html .=  "<tr>";
-        $html .=  "<td>";
-        $html .=  $row->datetime;
-        $html .=  "</td>";
-        $html .=  "<td>";
-        $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
-        foreach($rows_gruppen as $row_gruppe){
-            $html .=  $row_gruppe->name."<br/>";
-
-        }
-        //$html .=  $row->gruppen;
-        $html .=  "</td>";
-        $html .=  "<td>";
-        $html .=  $row->termaname;
-        $html .=  "</td>";
-        $html .=  "<td>";
-        $html .=  $row->beschreibung;
-        $html .=  "</td>";
-        $html .=  "<td>";
-        $html .=  $row->ort;
-        $html .=  "</td>";
-        $html .=  "</tr>";*/
     }
     $html .=  "</table>";
     return $html;
