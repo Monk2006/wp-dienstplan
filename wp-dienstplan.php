@@ -68,8 +68,13 @@ function dienstplan_menu() {
     add_menu_page('Dienstplan', 'Dienstplan', 1,__FILE__, 'dienstplan_backend', get_bloginfo('wpurl').'/wp-content/plugins/wp-dienstplan/icon.png',26);
     add_submenu_page(__FILE__, 'Neuer Dienst', 'Neuer Dienst',1  ,'dienstplan_neu', 'dienstplan_neu');
     add_submenu_page(__FILE__, 'Einstellungen', 'Einstellungen',8,  'dienstplan_einstellungen', 'dienstplan_einstellungen');
+    add_submenu_page(null, 'Bearbeiten', 'Bearbeiten',1,  'dienstplan_bearbeiten', 'dienstplan_bearbeiten');
 }
 add_action('admin_menu', 'dienstplan_menu');
+
+function dienstplan_bearbeiten(){
+    echo "<h1>Bearbeiten</h1>";
+}
 
 function dienstplan_neu(){
 
@@ -383,7 +388,7 @@ function dienstplan_backend(){
         echo $row->ort;
         echo "</td>";
         echo "<td>";
-        echo '[ bearbeiten] [ l&ouml;schen ]';
+        echo '<a href="admin.php?page=dienstplan_bearbeiten&dienst_id='.$row->id.'">[ bearbeiten ]</a> [ l&ouml;schen ]';
         echo "</td>";
         echo "</tr>";
     }
