@@ -383,7 +383,7 @@ function dienstplan_backend(){
         echo $row->ort;
         echo "</td>";
         echo "<td>";
-        echo '<div id="icon-tools" class="icon16"></div>';
+        echo '[ bearbeiten] [ l&ouml;schen ]';
         echo "</td>";
         echo "</tr>";
     }
