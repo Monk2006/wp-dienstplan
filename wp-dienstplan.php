@@ -677,22 +677,9 @@ function dienstplan_pdf(){
 
 }
 
-function dienstplan_vcalendar(){
-    if(isset($_GET['vcalendardienstplan'])){
-        $pdf=new PDF();
-        $pdf->SetLeftMargin(20);
-
-        $pdf->AliasNbPages();
-        $pdf->AddPage();
-        $pdf->SetFont('Arial','',12);
-        //$data=$pdf->LoadData();
-        //$pdf->FancyTable($data);
-
-        $pdf->Output();
-
-
-        return null;
-
+function dienstplan_icalendar(){
+    if(isset($_GET['icalendardienstplan'])){
+        
 
         die();
     }
