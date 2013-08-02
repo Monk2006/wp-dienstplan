@@ -8,6 +8,8 @@
     Version: 0.1
 */
 // Erstellt die Tabelle beim ersten Start
+
+require_once("pdf.php");
 function dienstplan_install_multisite(){
     global $wpdb;
     if (function_exists('is_multisite') && is_multisite()) {
@@ -654,7 +656,21 @@ add_action('init', 'dienstplan_pdf');
 
 function dienstplan_pdf(){
     if(isset($_GET['pdfdienstplan'])){
-        echo "PDF wohooooo";
+        $pdf=new PDF();
+        $pdf->SetLeftMargin(20);
+
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial','',12);
+        //$data=$pdf->LoadData();
+        //$pdf->FancyTable($data);
+
+        $pdf->Output();
+
+
+        return null;
+
+
         die();
     }
 
