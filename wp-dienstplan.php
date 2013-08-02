@@ -474,6 +474,11 @@ function dienstplan_backend(){
         $categoriesarray[] = $categorie->term_id;
     }
     $categories = implode(",",$categoriesarray);
+    if($_GET['action'] == "deletedienst"){
+        $wpdb->delete( $table_name_dienst, array( 'id_md5' => $_GET['dienstid'] ) );
+        $_SERVER['QUERY_STRING'] = explode("&action=deletedienst",$_SERVER['QUERY_STRING']);
+        $_SERVER['QUERY_STRING'] = $_SERVER['QUERY_STRING'][0];
+    }
     echo "<h1>Dienstplan</h1>";
     echo "<table class='wp-list-table widefat'>";
     echo "<tr>";
@@ -510,7 +515,7 @@ function dienstplan_backend(){
         echo $row->ort;
         echo "</td>";
         echo "<td>";
-        echo '<a href="admin.php?page=dienstplan_bearbeiten&dienst_id='.$row->id_md5.'">[ bearbeiten ]</a> [ l&ouml;schen ]';
+        echo '<a href="admin.php?page=dienstplan_bearbeiten&dienst_id='.$row->id_md5.'">[ bearbeiten ]</a><a href="'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING'].'&action=deletedienst&dienstid='.$row->id_md5.'">[ l&ouml;schen ]</a>';
         echo "</td>";
         echo "</tr>";
     }
