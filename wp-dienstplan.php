@@ -74,7 +74,118 @@ function dienstplan_menu() {
 add_action('admin_menu', 'dienstplan_menu');
 
 function dienstplan_bearbeiten(){
+    wp_enqueue_script('jquery-ui-datepicker');
+    wp_enqueue_style('sticky_post-admin-ui-css','http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/themes/base/jquery-ui.css',false,"1.9.0",false);
+    global $wpdb;
+    $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
+    $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
+
+    $categories = get_categories( $catargs );
+    foreach($categories as $categorie){
+        $categoriesarray[] = $categorie->term_id;
+    }
+    $categories = implode(",",$categoriesarray);
     echo "<h1>Bearbeiten</h1>";
+    $dienst_id = $_GET['dienst_id'];
+    $row = $wpdb->get_results("Select id,id_md5,DATE_FORMAT(datetime,'%d.%m.%Y') date,DATE_FORMAT(datetime,'%h:%i') time,ort,beschreibung,gruppen,term_id from ".$table_name_dienst." where id_md5 = '".$dienst_id."' ");
+    $catargs = array(
+        'type'                     => 'post',
+        'child_of'                 => 0,
+        'parent'                   => '',
+        'orderby'                  => 'name',
+        'order'                    => 'ASC',
+        'hide_empty'               => 0,
+        'hierarchical'             => 1,
+        'exclude'                  => '',
+        'include'                  => '',
+        'number'                   => '',
+        'taxonomy'                 => 'category',
+        'selected'                 => $row[0]->term_id,
+
+        'pad_counts'               => false );
+    echo "<form METHOD='POST'>";
+    echo "<input type='hidden' value='".$row[0]->gruppen."' id='gruppen' />";
+    echo "<table class='wp-list-table widefat'>";
+    echo "<tr>";
+    echo "<td>";
+    echo "Bereich";
+    echo "</td>";
+    echo "<td>";
+    wp_dropdown_categories( $catargs );
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>";
+    echo "Gruppe";
+    echo "</td>";
+    echo "<td>";
+    echo '<select id="select_gruppe" multiple="multiple" name="select_gruppe[]"></select>';
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>";
+    echo "Datum";
+    echo "</td>";
+    echo "<td>";
+    echo '<input id="datum" size="10" name="datum" value="'.$row[0]->date.'" />';
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>";
+    echo "Uhrzeit";
+    echo "</td>";
+    echo "<td>";
+    dienstplan_input_select_time('uhrzeit',$row[0]->time);
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>";
+    echo "Beschreibung";
+    echo "</td>";
+    echo "<td>";
+    echo '<input id="beschreibung" size="50" name="beschreibung" value="'.$row[0]->beschreibung.'" />';
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>";
+    echo "Ort";
+    echo "</td>";
+    echo "<td>";
+    echo '<input id="ort" size="50" name="ort" value="'.$row[0]->ort.'" />';
+    echo "</td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<td>";
+    echo "&nbsp;";
+    echo "</td>";
+    echo "<td>";
+    echo "<input type='submit' value='speichern' class='button button-primary button-large'/>";
+    echo "</td>";
+    echo "</tr>";
+
+    echo "</table>";
+
+    echo "</form>";
+
+    ?>
+    <script type="text/javascript">
+        jQuery(document).ready(function(){
+            jQuery('#datum').datepicker({dateFormat: "dd.mm.yy",minDate: 0 });
+            onCatChange();
+
+        });
+
+        var dropdown = document.getElementById("cat");
+        function onCatChange() {
+            var gruppen = jQuery("#gruppen").val();
+            if ( dropdown.options[dropdown.selectedIndex].value > 0 ) {
+                dienstplan_backend_gruppen_load(dropdown.options[dropdown.selectedIndex].value,gruppen);
+            }
+        }
+
+        dropdown.onchange = onCatChange;
+    </script>
+<?php
 }
 
 function dienstplan_neu(){
@@ -182,8 +293,8 @@ function dienstplan_neu(){
                 dienstplan_backend_gruppen_load(dropdown.options[dropdown.selectedIndex].value);
             }
         }
-
         dropdown.onchange = onCatChange;
+
     </script>
 <?php
 }
@@ -478,7 +589,11 @@ add_action( 'admin_footer', 'dienstplan_backend_gruppen_load_javascript' );
 function dienstplan_backend_gruppen_load_javascript() {
     ?>
     <script type="text/javascript" >
-        function dienstplan_backend_gruppen_load(term_id){
+        function dienstplan_backend_gruppen_load(term_id,gruppen){
+        if(gruppen)
+            gruppen = gruppen.split(",");
+        else
+            gruppen = null;
 
 
         jQuery(document).ready(function($) {
@@ -492,8 +607,13 @@ function dienstplan_backend_gruppen_load_javascript() {
             $.post(ajaxurl, data, function(response) {
                 response = JSON.parse(response);
                 $('#select_gruppe').find('option').remove();
-                for(var i = 0;i < response.length;i++)
-                    $('#select_gruppe').append($('<option>', { value : response[i].id }).text(response[i].name));
+                for(var i = 0;i < response.length;i++){
+                    if(jQuery.inArray(response[i].id,gruppen) != -1)
+                        $('#select_gruppe').append($('<option>', { value : response[i].id,selected: 'selected' }).text(response[i].name));
+                    else
+                        $('#select_gruppe').append($('<option>', { value : response[i].id }).text(response[i].name));
+
+                }
                 //alert(response.toSource());
             });
         });
