@@ -102,6 +102,8 @@ function dienstplan_neu(){
     if(isset($_POST['cat'])){
         $datetime = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
         $wpdb->insert($table_name_dienst,array('datetime' => $datetime,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe']),'term_id' => $_POST['cat']),array('%s','%s','%s','%s','%d'));
+        $wpdb->update($table_name_dienst,array('id_md5' => md5($wpdb->insert_id)),array("id" => $wpdb->insert_id) );
+        //echo md5($wpdb->insert_id);
     }
     echo "<form METHOD='POST'>";
     echo "<table class='wp-list-table widefat'>";
@@ -364,7 +366,7 @@ function dienstplan_backend(){
     echo "<th>Bearbeiten</th>";
 
     echo "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.datetime > NOW() and t.term_id in (".$categories.") order by d.datetime");
+    $rows = $wpdb->get_results("SELECT d.id,d.id_md5,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.datetime > NOW() and t.term_id in (".$categories.") order by d.datetime");
 
     foreach($rows as $row){
         echo "<tr>";
@@ -389,7 +391,7 @@ function dienstplan_backend(){
         echo $row->ort;
         echo "</td>";
         echo "<td>";
-        echo '<a href="admin.php?page=dienstplan_bearbeiten&dienst_id='.$row->id.'">[ bearbeiten ]</a> [ l&ouml;schen ]';
+        echo '<a href="admin.php?page=dienstplan_bearbeiten&dienst_id='.$row->id_md5.'">[ bearbeiten ]</a> [ l&ouml;schen ]';
         echo "</td>";
         echo "</tr>";
     }
