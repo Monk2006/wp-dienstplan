@@ -79,6 +79,13 @@ function dienstplan_bearbeiten(){
     global $wpdb;
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
+    if(isset($_POST['cat'])){
+        $datetime = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
+        $wpdb->update($table_name_dienst,array('datetime' => $datetime,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'], 'gruppen' => implode(',',$_POST['select_gruppe']), 'term_id' => $_POST['cat'] ),array("id" => $_POST['id']) );
+        dienstplan_backend();
+        return false;
+
+    }
 
     $categories = get_categories( $catargs );
     foreach($categories as $categorie){
@@ -105,6 +112,7 @@ function dienstplan_bearbeiten(){
         'pad_counts'               => false );
     echo "<form METHOD='POST'>";
     echo "<input type='hidden' value='".$row[0]->gruppen."' id='gruppen' />";
+    echo "<input type='hidden' value='".$row[0]->id."' name='id' />";
     echo "<table class='wp-list-table widefat'>";
     echo "<tr>";
     echo "<td>";
@@ -209,7 +217,7 @@ function dienstplan_neu(){
         'show_option_none'         => __(' '),
         'pad_counts'               => false );
     echo "<h1>Neuer Dienst</h1>";
-    print_r($_POST);
+    //print_r($_POST);
     if(isset($_POST['cat'])){
         $datetime = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
         $wpdb->insert($table_name_dienst,array('datetime' => $datetime,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe']),'term_id' => $_POST['cat']),array('%s','%s','%s','%s','%d'));
