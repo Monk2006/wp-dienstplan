@@ -653,6 +653,7 @@ function dienstplan_backend_gruppen_load_callback() {
 }
 
 add_action('init', 'dienstplan_pdf');
+add_action('init', 'dienstplan_vcalendar');
 
 function dienstplan_pdf(){
     if(isset($_GET['pdfdienstplan'])){
@@ -674,6 +675,27 @@ function dienstplan_pdf(){
         die();
     }
 
+}
+
+function dienstplan_vcalendar(){
+    if(isset($_GET['vcalendardienstplan'])){
+        $pdf=new PDF();
+        $pdf->SetLeftMargin(20);
+
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial','',12);
+        //$data=$pdf->LoadData();
+        //$pdf->FancyTable($data);
+
+        $pdf->Output();
+
+
+        return null;
+
+
+        die();
+    }
 }
 
 
