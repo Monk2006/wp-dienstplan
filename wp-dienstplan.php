@@ -37,6 +37,7 @@ function dienstplan_install() {
          //Calendar Tabelle
          $sql = "CREATE TABLE " . $table_name . " (
                   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+                  `id_md5` varchar(40) DEFAULT NULL,
                   `datetime` datetime NOT NULL,
                   `ort` varchar(500) NOT NULL DEFAULT '',
                   `beschreibung` varchar(1000) NOT NULL DEFAULT '',
