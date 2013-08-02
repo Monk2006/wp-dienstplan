@@ -658,5 +658,5 @@ add_filter('the_content', 'dienstplan_filter');
 
 //TODO: PDF Export nach Bereich
 //TODO: Deintsalltion -> Löschen der Tabellen
-//TODO: Dienst bearbeiten
 //TODO: Dienst löschen
+//TODO: Beim Bearbeiten und erstellen felder überprüfen
