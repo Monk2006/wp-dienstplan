@@ -399,11 +399,13 @@ function dienstplan_page($term_id){
     global $wpdb;
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
+    $anzahl_gruppen = $wpdb->get_var("Select count(*) from ".$table_name_gruppen." where term_id = ".$term_id." ");
     $html =  "<table class='wp-list-table widefat' width='100%'>";
     $html .=  "<tr>";
     $html .=  "<th>Datum</th>";
     $html .=  "<th>Uhrzeit</th>";
-    $html .=  "<th>Gruppen</th>";
+    if($anzahl_gruppen > 1)
+        $html .=  "<th>Gruppen</th>";
     $html .=  "<th>Beschreibung</th>";
     $html .=  "<th>Ort</th>";
 
@@ -412,11 +414,16 @@ function dienstplan_page($term_id){
     $ersterlauf = 0;
     $monat = '';
     foreach($rows as $row){
+        if($anzahl_gruppen > 1)
+            $rowspan = 5;
+        else
+            $rowspan = 4;
+
         if($ersterlauf == 1){
             $ersterlauf = 0;
             $monat = substr($row->datetime,3,2);
             $html .= "<tr>\n";
-            $html .= "<td colspan=\"5\" style=\"font-weight:bold\">";
+            $html .= "<td colspan=\"".$rowspan."\" style=\"font-weight:bold\">";
             $html .= dienstplan_monat($row->datetime);
             $html .= "</td>\n";
             $html .= "</tr>\n";
@@ -426,7 +433,7 @@ function dienstplan_page($term_id){
             if($monatneu != $monat){
                 $monat = $monatneu;
                 $html .= "<tr>\n";
-                $html .= "<td colspan=\"5\" style=\"font-weight:bold\">";
+                $html .= "<td colspan=\"".$rowspan."\" style=\"font-weight:bold\">";
                 $html .= dienstplan_monat($row->datetime);
                 $html .= "</td>\n";
                 $html .= "</tr>\n";
@@ -443,13 +450,15 @@ function dienstplan_page($term_id){
         }
         $html .= $zeit;
         $html .= "</td>\n";
-        $html .= "<td>";
-        $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
-        foreach($rows_gruppen as $row_gruppe){
-            $html .= $row_gruppe->name."<br/>";
+        if($anzahl_gruppen > 1) {
+            $html .= "<td>";
+            $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
+            foreach($rows_gruppen as $row_gruppe){
+                $html .= $row_gruppe->name."<br/>";
 
+            }
+            $html .= "</td>\n";
         }
-        $html .= "</td>\n";
         $html .= "<td>";
         $html .= $row->beschreibung;
         $html .= "</td>\n";
