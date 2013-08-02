@@ -650,6 +650,17 @@ function dienstplan_backend_gruppen_load_callback() {
     die(); // this is required to return a proper result
 }
 
+add_action('init', 'dienstplan_pdf');
+
+function dienstplan_pdf(){
+    if(isset($_GET['pdfdienstplan'])){
+        echo "PDF wohooooo";
+        die();
+    }
+
+}
+
+
 
 
 function dienstplan_filter($content) {
