@@ -775,10 +775,58 @@ function dienstplan_pdf(){
 
 function dienstplan_icalendar(){
     if(isset($_GET['icalendardienstplan'])){
+        include_once('ical/class.iCal.inc.php');
+        global $wpdb;
+        $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
+        $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
+        $anzahl_gruppen = $wpdb->get_var("Select count(*) from ".$table_name_gruppen." where term_id = ".$_GET['pdfdienstplan']." ");
 
+        $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$_GET['pdfdienstplan']."' and d.datetime > NOW() order by d.datetime");
+
+
+        $organizer =  array('Kurt', 'kurt2@flaimo.com');
+        $categories = array('Freetime','Party');
+        $attendees = (array) array(
+            'Michi' => 'flaimo2@gmx.net,1',
+            'Felix' => ' ,2',
+            'Walter' => 'flaimo2@gmx.net,3'
+        );
+        $days = array (2,3);
+
+        $iCal = new iCal("",0,"");
+        foreach ($rows as $row){
+            $iCal->addEvent(
+                "", // Organizer
+                time()+10000, // Start Time (timestamp; for an allday event the startdate has to start at YYYY-mm-dd 00:00:00)
+                time()+40000, // End Time (write 'allday' for an allday event instead of a timestamp)
+                'Vienna', // Location
+                0, // Transparancy (0 = OPAQUE | 1 = TRANSPARENT)
+                $categories, // Array with Strings
+                'See homepage for more details...', // Description
+                'Air and Style Snowboard Contest', // Title
+                1, // Class (0 = PRIVATE | 1 = PUBLIC | 2 = CONFIDENTIAL)
+                $attendees, // Array (key = attendee name, value = e-mail, second value = role of the attendee [0 = CHAIR | 1 = REQ | 2 = OPT | 3 =NON])
+                5, // Priority = 0-9
+                5, // frequency: 0 = once, secoundly - yearly = 1-7
+                10, // recurrency end: ('' = forever | integer = number of times | timestring = explicit date)
+                2, // Interval for frequency (every 2,3,4 weeks...)
+                $days, // Array with the number of the days the event accures (example: array(0,1,5) = Sunday, Monday, Friday
+                0, // Startday of the Week ( 0 = Sunday - 6 = Saturday)
+                '', // exeption dates: Array with timestamps of dates that should not be includes in the recurring event
+                0,  // Sets the time in minutes an alarm appears before the event in the programm. no alarm if empty string or 0
+                1, // Status of the event (0 = TENTATIVE, 1 = CONFIRMED, 2 = CANCELLED)
+                'http://flaimo.com/', // optional URL for that event
+                'de', // Language of the Strings
+                '' // Optional UID for this event
+            );
+        }
+
+
+        $iCal->outputFile('ics');
 
         die();
     }
+
 }
 
 
