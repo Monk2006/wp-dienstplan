@@ -653,7 +653,7 @@ function dienstplan_backend_gruppen_load_callback() {
 }
 
 add_action('init', 'dienstplan_pdf');
-add_action('init', 'dienstplan_vcalendar');
+add_action('init', 'dienstplan_icalendar');
 
 function dienstplan_pdf(){
     if(isset($_GET['pdfdienstplan'])){
@@ -663,8 +663,104 @@ function dienstplan_pdf(){
         $pdf->AliasNbPages();
         $pdf->AddPage();
         $pdf->SetFont('Arial','',12);
-        //$data=$pdf->LoadData();
-        //$pdf->FancyTable($data);
+
+        /* INHALT */
+
+        $pdf->SetFillColor(255,0,0);
+        $pdf->SetTextColor(255);
+        $pdf->SetDrawColor(128,0,0);
+        $pdf->SetLineWidth(.1);
+        $pdf->SetFont('Arial','B');
+        $pdf->Ln();
+        //Color and font restoration
+        $pdf->SetFillColor(224,235,255);
+        $pdf->SetTextColor(0);
+        $pdf->SetFont('Arial','',10);
+        //Data
+        $fill=false;
+        $ersterlauf = 1;
+        $monat = '';
+        $start_page_y = $pdf->GetY();
+
+        global $wpdb;
+        $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
+        $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
+        $anzahl_gruppen = $wpdb->get_var("Select count(*) from ".$table_name_gruppen." where term_id = ".$_GET['pdfdienstplan']." ");
+
+        $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$_GET['pdfdienstplan']."' and d.datetime > NOW() order by d.datetime");
+
+        foreach($rows as $row){
+            $y2 = 0;
+            $pdf->SetX(20);
+            if($pdf->GetY() > 260){
+                $pdf->AddPage();
+                $ersterlauf = 1;
+            }
+            if($ersterlauf == 1){
+                $ersterlauf = 0;
+                $monat = substr($row->datetime,3,2);
+                $pdf->Cell(20,6,utf8_decode(dienstplan_monat($row->datetime,1)),0,0,'L');
+                $pdf->Ln();
+
+            }
+            else{
+                $monatneu = substr($row->datetime,3,2);
+                if($monatneu != $monat){
+                    $monat = $monatneu;
+                    $pdf->Ln(10);
+                    $pdf->Cell(20,6,utf8_decode(dienstplan_monat($row->datetime,1)),0,0,'L');
+                    $pdf->Ln();
+                }
+            }
+            $pdf->SetX(20);
+            $y = $pdf->GetY();
+            //$pdf->Cell(20,6,$pdf->GetY(),0,0,'L');
+            $pdf->Cell(20,6,substr($row->datetime,0,10),0,0,'L');
+            $pdf->SetX(40);
+            $zeit = substr($row->datetime,11,5);
+            if($zeit == "00:00"){
+                $zeit = "";
+            }
+            $pdf->Cell(15,6,$zeit,0,0,'L');
+            $pdf->SetXY(50,$y);
+
+            $gruppen = "";
+            if($anzahl_gruppen > 1) {
+                $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
+                foreach($rows_gruppen as $row_gruppe){
+                    $gruppen .= utf8_decode($row_gruppe->name."\n");
+
+                }
+            }
+
+
+
+            $pdf->MultiCell(30,6,$gruppen,0,'L');
+            if($pdf->GetY() > $y2){
+                //echo "1";
+                $y2 = $pdf->GetY();
+            }
+            $pdf->SetXY(85,$y);
+            $pdf->MultiCell(75,6,utf8_decode($row->beschreibung),0,'L');
+            if($pdf->GetY() > $y2){
+                $y2 = $pdf->GetY();
+            }
+            $pdf->SetXY(160,$y);
+            $pdf->MultiCell(40,6,utf8_decode($row->ort),0,'L');
+            if($pdf->GetY() > $y2){
+                $y2 = $pdf->GetY();
+            }
+            $pdf->SetXY(160,$y2);
+
+            //$pdf->Ln();
+            //$fill=!$fill;
+        }
+
+
+
+
+
+
 
         $pdf->Output();
 
@@ -679,7 +775,7 @@ function dienstplan_pdf(){
 
 function dienstplan_icalendar(){
     if(isset($_GET['icalendardienstplan'])){
-        
+
 
         die();
     }
