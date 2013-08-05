@@ -235,8 +235,9 @@ function dienstplan_neu(){
     echo "<h1>Neuer Dienst</h1>";
     //print_r($_POST);
     if(isset($_POST['cat'])){
-        $start = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
-        $wpdb->insert($table_name_dienst,array('start' => $start,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe']),'term_id' => $_POST['cat']),array('%s','%s','%s','%s','%d'));
+        $start = dienstplan_date_german2mysql($_POST['datum_start'])." ".$_POST['selectbox_uhrzeit_start_hour'].":".$_POST['selectbox_uhrzeit_start_minute'];
+        $ende = dienstplan_date_german2mysql($_POST['datum_ende'])." ".$_POST['selectbox_uhrzeit_ende_hour'].":".$_POST['selectbox_uhrzeit_ende_minute'];
+        $wpdb->insert($table_name_dienst,array('start' => $start,'ende' => $ende,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe']),'term_id' => $_POST['cat']),array('%s','%s','%s','%s','%d'));
         $wpdb->update($table_name_dienst,array('id_md5' => md5($wpdb->insert_id)),array("id" => $wpdb->insert_id) );
         //echo md5($wpdb->insert_id);
     }
@@ -260,18 +261,20 @@ function dienstplan_neu(){
     echo "</tr>";
     echo "<tr>";
     echo "<td>";
-    echo "Datum";
+    echo "Start";
     echo "</td>";
     echo "<td>";
-    echo '<input id="datum" size="10" name="datum" value="" />';
+    echo '<input id="datum_start" size="10" name="datum_start" value="" />';
+    dienstplan_input_select_time('uhrzeit_start');
     echo "</td>";
     echo "</tr>";
     echo "<tr>";
     echo "<td>";
-    echo "Uhrzeit";
+    echo "Ende";
     echo "</td>";
     echo "<td>";
-    dienstplan_input_select_time('uhrzeit');
+    echo '<input id="datum_ende" size="10" name="datum_ende" value="" />';
+    dienstplan_input_select_time('uhrzeit_ende');
     echo "</td>";
     echo "</tr>";
     echo "<tr>";
@@ -308,7 +311,8 @@ function dienstplan_neu(){
     ?>
     <script type="text/javascript">
         jQuery(document).ready(function(){
-            jQuery('#datum').datepicker({dateFormat: "dd.mm.yy",minDate: 0 });
+            jQuery('#datum_start').datepicker({dateFormat: "dd.mm.yy",minDate: 0 });
+            jQuery('#datum_ende').datepicker({dateFormat: "dd.mm.yy",minDate: 0 });
         });
 
         var dropdown = document.getElementById("cat");
