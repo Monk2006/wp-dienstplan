@@ -64,6 +64,19 @@ function dienstplan_install() {
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql);
     }
+    $table_name = $wpdb->prefix . "dienstplan_meta";
+    if($wpdb->get_var("show tables like '$table_name'") != $table_name) {
+        //Calendar Tabelle
+        $sql = "CREATE TABLE " . $table_name . " (
+                  `text_oben` varchar(100) DEFAULT '',
+                  `text_unten` varchar(100) DEFAULT NULL,
+                  `logo_links` varchar(200) DEFAULT NULL,
+                  `logo_rechts` varchar(200) DEFAULT NULL
+                )";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
 }
 register_activation_hook(__FILE__,'dienstplan_install_multisite');
 
@@ -359,7 +372,6 @@ function dienstplan_einstellungen(){
     echo "</tr>";
     echo "</table>";
     echo "</form>";
-
 
 }
 
