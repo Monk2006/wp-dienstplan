@@ -886,4 +886,5 @@ add_filter('the_content', 'dienstplan_filter');
 //TODO: Deintsalltion -> Löschen der Tabellen
 //TODO: Beim Bearbeiten und erstellen felder überprüfen
 //TODO: Endezeit Dienst / Dauer
+//TODO: Meta Infos Bild selector?
 //TODO: ICalender einstellungen
