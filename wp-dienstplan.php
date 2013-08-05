@@ -40,11 +40,12 @@ function dienstplan_install() {
          $sql = "CREATE TABLE " . $table_name . " (
                   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
                   `id_md5` varchar(40) DEFAULT NULL,
-                  `datetime` datetime NOT NULL,
+                  `start` start NOT NULL,
+                  `ende` start NOT NULL,
                   `ort` varchar(500) NOT NULL DEFAULT '',
                   `beschreibung` varchar(1000) NOT NULL DEFAULT '',
                   `gruppen` varchar(50) DEFAULT '',
-                   `term_id` int(11) DEFAULT NULL,
+                  `term_id` int(11) DEFAULT NULL,
                   PRIMARY KEY (`id`)
                 )";
 
@@ -95,8 +96,8 @@ function dienstplan_bearbeiten(){
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
     if(isset($_POST['cat'])){
-        $datetime = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
-        $wpdb->update($table_name_dienst,array('datetime' => $datetime,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'], 'gruppen' => implode(',',$_POST['select_gruppe']), 'term_id' => $_POST['cat'] ),array("id" => $_POST['id']) );
+        $start = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
+        $wpdb->update($table_name_dienst,array('start' => $start,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'], 'gruppen' => implode(',',$_POST['select_gruppe']), 'term_id' => $_POST['cat'] ),array("id" => $_POST['id']) );
         dienstplan_backend();
         return false;
 
@@ -109,7 +110,7 @@ function dienstplan_bearbeiten(){
     $categories = implode(",",$categoriesarray);
     echo "<h1>Bearbeiten</h1>";
     $dienst_id = $_GET['dienst_id'];
-    $row = $wpdb->get_results("Select id,id_md5,DATE_FORMAT(datetime,'%d.%m.%Y') date,DATE_FORMAT(datetime,'%h:%i') time,ort,beschreibung,gruppen,term_id from ".$table_name_dienst." where id_md5 = '".$dienst_id."' ");
+    $row = $wpdb->get_results("Select id,id_md5,DATE_FORMAT(start,'%d.%m.%Y') date,DATE_FORMAT(start,'%h:%i') time,ort,beschreibung,gruppen,term_id from ".$table_name_dienst." where id_md5 = '".$dienst_id."' ");
     $catargs = array(
         'type'                     => 'post',
         'child_of'                 => 0,
@@ -234,8 +235,8 @@ function dienstplan_neu(){
     echo "<h1>Neuer Dienst</h1>";
     //print_r($_POST);
     if(isset($_POST['cat'])){
-        $datetime = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
-        $wpdb->insert($table_name_dienst,array('datetime' => $datetime,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe']),'term_id' => $_POST['cat']),array('%s','%s','%s','%s','%d'));
+        $start = dienstplan_date_german2mysql($_POST['datum'])." ".$_POST['selectbox_uhrzeit_hour'].":".$_POST['selectbox_uhrzeit_minute'];
+        $wpdb->insert($table_name_dienst,array('start' => $start,'ort' => $_POST['ort'],'beschreibung' => $_POST['beschreibung'],'gruppen' => implode(',',$_POST['select_gruppe']),'term_id' => $_POST['cat']),array('%s','%s','%s','%s','%d'));
         $wpdb->update($table_name_dienst,array('id_md5' => md5($wpdb->insert_id)),array("id" => $wpdb->insert_id) );
         //echo md5($wpdb->insert_id);
     }
@@ -532,12 +533,12 @@ function dienstplan_backend(){
     echo "<th>Bearbeiten</th>";
 
     echo "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,d.id_md5,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.datetime > NOW() and t.term_id in (".$categories.") order by d.datetime");
+    $rows = $wpdb->get_results("SELECT d.id,d.id_md5,DATE_FORMAT(d.start,'%d.%m.%Y %H:%i') start,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.start > NOW() and t.term_id in (".$categories.") order by d.start");
 
     foreach($rows as $row){
         echo "<tr>";
         echo "<td>";
-        echo $row->datetime;
+        echo $row->start;
         echo "</td>";
         echo "<td>";
         $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
@@ -580,7 +581,7 @@ function dienstplan_page($term_id){
     $html .=  "<th>Ort</th>";
 
     $html .=  "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$term_id."' and d.datetime > NOW() order by d.datetime");
+    $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.start,'%d.%m.%Y %H:%i') start,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$term_id."' and d.start > NOW() order by d.start");
     $ersterlauf = 0;
     $monat = '';
     foreach($rows as $row){
@@ -591,30 +592,30 @@ function dienstplan_page($term_id){
 
         if($ersterlauf == 1){
             $ersterlauf = 0;
-            $monat = substr($row->datetime,3,2);
+            $monat = substr($row->start,3,2);
             $html .= "<tr>\n";
             $html .= "<td colspan=\"".$rowspan."\" style=\"font-weight:bold\">";
-            $html .= dienstplan_monat($row->datetime);
+            $html .= dienstplan_monat($row->start);
             $html .= "</td>\n";
             $html .= "</tr>\n";
         }
         else{
-            $monatneu = substr($row->datetime,3,2);
+            $monatneu = substr($row->start,3,2);
             if($monatneu != $monat){
                 $monat = $monatneu;
                 $html .= "<tr>\n";
                 $html .= "<td colspan=\"".$rowspan."\" style=\"font-weight:bold\">";
-                $html .= dienstplan_monat($row->datetime);
+                $html .= dienstplan_monat($row->start);
                 $html .= "</td>\n";
                 $html .= "</tr>\n";
             }
         }
         $html .= "<tr>\n";
         $html .= "<td>";
-        $html .= substr($row->datetime,0,10);
+        $html .= substr($row->start,0,10);
         $html .= "</td>\n";
         $html .= "<td>";
-        $zeit = substr($row->datetime,11,5);
+        $zeit = substr($row->start,11,5);
         if($zeit == "00:00"){
             $zeit = "";
         }
@@ -728,7 +729,7 @@ function dienstplan_pdf(){
         $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
         $anzahl_gruppen = $wpdb->get_var("Select count(*) from ".$table_name_gruppen." where term_id = ".$_GET['pdfdienstplan']." ");
 
-        $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$_GET['pdfdienstplan']."' and d.datetime > NOW() order by d.datetime");
+        $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.start,'%d.%m.%Y %H:%i') start,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$_GET['pdfdienstplan']."' and d.start > NOW() order by d.start");
 
         foreach($rows as $row){
             $y2 = 0;
@@ -739,26 +740,26 @@ function dienstplan_pdf(){
             }
             if($ersterlauf == 1){
                 $ersterlauf = 0;
-                $monat = substr($row->datetime,3,2);
-                $pdf->Cell(20,6,utf8_decode(dienstplan_monat($row->datetime,1)),0,0,'L');
+                $monat = substr($row->start,3,2);
+                $pdf->Cell(20,6,utf8_decode(dienstplan_monat($row->start,1)),0,0,'L');
                 $pdf->Ln();
 
             }
             else{
-                $monatneu = substr($row->datetime,3,2);
+                $monatneu = substr($row->start,3,2);
                 if($monatneu != $monat){
                     $monat = $monatneu;
                     $pdf->Ln(10);
-                    $pdf->Cell(20,6,utf8_decode(dienstplan_monat($row->datetime,1)),0,0,'L');
+                    $pdf->Cell(20,6,utf8_decode(dienstplan_monat($row->start,1)),0,0,'L');
                     $pdf->Ln();
                 }
             }
             $pdf->SetX(20);
             $y = $pdf->GetY();
             //$pdf->Cell(20,6,$pdf->GetY(),0,0,'L');
-            $pdf->Cell(20,6,substr($row->datetime,0,10),0,0,'L');
+            $pdf->Cell(20,6,substr($row->start,0,10),0,0,'L');
             $pdf->SetX(40);
-            $zeit = substr($row->datetime,11,5);
+            $zeit = substr($row->start,11,5);
             if($zeit == "00:00"){
                 $zeit = "";
             }
@@ -797,12 +798,6 @@ function dienstplan_pdf(){
             //$fill=!$fill;
         }
 
-
-
-
-
-
-
         $pdf->Output();
 
 
@@ -822,7 +817,7 @@ function dienstplan_icalendar(){
         $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
         $anzahl_gruppen = $wpdb->get_var("Select count(*) from ".$table_name_gruppen." where term_id = ".$_GET['pdfdienstplan']." ");
 
-        $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.datetime,'%d.%m.%Y %H:%i') datetime,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$_GET['pdfdienstplan']."' and d.datetime > NOW() order by d.datetime");
+        $rows = $wpdb->get_results("SELECT d.id,DATE_FORMAT(d.start,'%d.%m.%Y %H:%i') start,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where t.term_id = '".$_GET['pdfdienstplan']."' and d.start > NOW() order by d.start");
 
 
         $organizer =  array('Kurt', 'kurt2@flaimo.com');
