@@ -2,6 +2,9 @@
 require('fpdf17/fpdf.php');
 class PDF extends FPDF {
     function Header(){
+        global $wpdb;
+        $table_name_meta = $wpdb->prefix . "dienstplan_meta";
+        $row = $wpdb->get_results("select * from $table_name_meta");
         //include("config.inc");
         //$bereich_id = $_GET['bereich'];
         global $wpdb;
@@ -25,10 +28,10 @@ class PDF extends FPDF {
         //Title
         $this->Ln(8);
         $this->SetY(15);
-        $this->Cell(0,0,get_bloginfo( 'name' ),0,0,'C');
+        $this->Cell(0,0,$row[0]->text_oben,0,0,'C');
         $this->Ln(10);
 
-            $this->Cell(0,0,'- '.html_entity_decode(get_bloginfo( 'description' )).' -',0,2,'C');
+            $this->Cell(0,0,'- '.$row[0]->text_unten.' -',0,2,'C');
             $this->Ln(10);
         $this->Cell(0,0,$bereich,0,0,'C');
         $this->Ln(10);
