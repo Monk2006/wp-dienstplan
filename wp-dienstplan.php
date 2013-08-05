@@ -326,6 +326,7 @@ function dienstplan_einstellungen(){
 
     global $wpdb;
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
+    $table_name_meta = $wpdb->prefix . "dienstplan_meta";
     $catargs = array(
         'type'                     => 'post',
         'child_of'                 => 0,
@@ -373,6 +374,33 @@ function dienstplan_einstellungen(){
     echo "</table>";
     echo "</form>";
 
+
+    $row = $wpdb->get_results("select * from $table_name_meta");
+
+    echo "<h2>Allgemeine Info</h2>";
+    echo "<form METHOD='POST'>";
+    echo "<table class='wp-list-table widefat'>";
+    echo "<tr>";
+    echo "<th>Textzeile Oben</th>";
+    echo "<td><input type='text' name='textoben' value='".$row[0]->text_oben."' size='50'/></td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<th>Textzeile Unten</th>";
+    echo "<td><input type='text' name='textunten' value='".$row[0]->text_unten."' size='50'/></td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<th>Bild Links</th>";
+    echo "<td></td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<th>Bild Rechts</th>";
+    echo "<td></td>";
+    echo "</tr>";
+    echo "<tr>";
+    echo "<th>&nbsp;</th>";
+    echo "<td><input type='submit' value='speichern'/></td>";
+    echo "</tr>";
+    echo "</table>";
 }
 
 function dienstplan_input_select_time($id,$zeit = null){
@@ -541,7 +569,8 @@ function dienstplan_page($term_id){
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
     $anzahl_gruppen = $wpdb->get_var("Select count(*) from ".$table_name_gruppen." where term_id = ".$term_id." ");
-    $html =  "<table class='wp-list-table widefat' width='100%'>";
+    $html = "<a href='?pdfdienstplan=".$term_id."' >PDF Fahrplan</a>";
+    $html .=  "<table class='wp-list-table widefat' width='100%'>";
     $html .=  "<tr>";
     $html .=  "<th>Datum</th>";
     $html .=  "<th>Uhrzeit</th>";
