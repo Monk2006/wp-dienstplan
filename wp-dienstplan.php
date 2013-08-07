@@ -537,12 +537,21 @@ function dienstplan_backend(){
     echo "<th>Bearbeiten</th>";
 
     echo "</tr>";
-    $rows = $wpdb->get_results("SELECT d.id,d.id_md5,DATE_FORMAT(d.start,'%d.%m.%Y %H:%i') start,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.start > NOW() and t.term_id in (".$categories.") order by d.start");
+    $rows = $wpdb->get_results("SELECT d.id,d.id_md5,DATE_FORMAT(d.start,'%d.%m.%Y %H:%i') start,DATE_FORMAT(d.ende,'%d.%m.%Y %H:%i') ende,d.ort,d.beschreibung,d.gruppen,t.name termaname FROM ".$table_name_dienst." d inner join ".$wpdb->prefix . "terms as t on (d.term_id = t.term_id) where d.start > NOW() and t.term_id in (".$categories.") order by d.start");
 
     foreach($rows as $row){
         echo "<tr>";
         echo "<td>";
         echo $row->start;
+
+        if(substr($row->start,0,10) == substr($row->ende,0,10)){
+            echo " - ";
+            echo substr($row->ende,11,6);
+        }
+        else {
+            echo "<br><div align='center'>bis</div><br>";
+            echo $row->ende;
+        }
         echo "</td>";
         echo "<td>";
         $rows_gruppen = $wpdb->get_results("select name from ".$table_name_gruppen." where id in (".$row->gruppen.")");
