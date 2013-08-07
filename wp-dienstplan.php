@@ -574,7 +574,7 @@ function dienstplan_page($term_id){
     $table_name_gruppen = $wpdb->prefix . "dienstplan_gruppen";
     $table_name_dienst = $wpdb->prefix . "dienstplan_dienste";
     $anzahl_gruppen = $wpdb->get_var("Select count(*) from ".$table_name_gruppen." where term_id = ".$term_id." ");
-    $html = "<a href='?pdfdienstplan=".$term_id."' >PDF Fahrplan</a>";
+    $html = "<a href='?pdfdienstplan=".$term_id."' >PDF Dienstplan</a>";
     $html .=  "<table class='wp-list-table widefat' width='100%'>";
     $html .=  "<tr>";
     $html .=  "<th>Datum</th>";
